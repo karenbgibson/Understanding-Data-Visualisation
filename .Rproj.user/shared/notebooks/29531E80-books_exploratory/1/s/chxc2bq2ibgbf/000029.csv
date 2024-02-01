@@ -1,0 +1,7 @@
+"0",""
+"0","#looking at the average review score for languages that appear >20"
+"0","(language_avg_20 <- books_cleaned_average %>% "
+"0","  group_by(language_code) %>%"
+"0","  filter(n() > 20) %>% "
+"0","  summarise(count = n(), mean_avg = mean(average_rating))"
+"0",")"

@@ -1,0 +1,28 @@
+{
+    "id": "54C128EB",
+    "path": "~/Data Viz/books_exploratory.Rmd",
+    "project_path": "books_exploratory.Rmd",
+    "type": "r_markdown",
+    "hash": "2400768401",
+    "contents": "",
+    "dirty": false,
+    "created": 1706136581408.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "chunk_output_type": "inline",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "345,12",
+        "scrollLine": "337"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1706825133,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1706825134033,
+    "read_only": false,
+    "read_only_alternatives": []
+}

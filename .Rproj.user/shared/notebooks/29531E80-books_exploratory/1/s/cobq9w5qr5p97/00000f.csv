@@ -1,0 +1,5 @@
+"0","(ratings_boxplot <- books_cleaned_average %>%"
+"0","  mutate(rounded_rating = as.factor(rounded_rating)) %>% "
+"0","  ggplot(aes(x = rounded_rating,"
+"0","             y= ratings_count)) +"
+"0","  geom_boxplot())"

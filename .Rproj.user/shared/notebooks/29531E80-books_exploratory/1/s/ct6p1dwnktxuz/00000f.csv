@@ -1,0 +1,5 @@
+"0","books_cleaned <- books_cleaned %>% "
+"0","  mutate(average_rating = as.double(average_rating),"
+"0","         language_code = as.factor(language_code),"
+"0","         publication_date = mdy(publication_date)) %>% "
+"0","  drop_na(publication_date)"

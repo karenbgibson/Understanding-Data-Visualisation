@@ -1,0 +1,6 @@
+"0",""
+"0","(rating_count_ranges <- books_cleaned_average %>% "
+"0","  group_by(rounded_rating) %>% "
+"0","  summarise(min_review_count = min(ratings_count),"
+"0","            max_review_count = max(ratings_count))"
+"0",")"

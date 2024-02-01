@@ -1,0 +1,2 @@
+"0","(avg_all_books <- books_cleaned_average %>% "
+"0","  summarise(mean_avg = mean(average_rating)))"

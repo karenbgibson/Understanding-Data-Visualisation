@@ -1,0 +1,4 @@
+"0","top_5_percent_ratings_count <- books_cleaned_average %>% "
+"0","  mutate(top_5_percent_ratings_count = "
+"0","           percent_rank(ratings_count) > 0.95) %>% "
+"0","  filter(top_5_percent_ratings_count == TRUE)"

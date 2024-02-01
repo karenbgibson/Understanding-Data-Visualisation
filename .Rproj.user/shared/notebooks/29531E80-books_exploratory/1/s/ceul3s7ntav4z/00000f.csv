@@ -1,0 +1,2 @@
+"0","books_cleaned <- books_cleaned %>% "
+"0","  select(-c(book_id, isbn, num_pages))"

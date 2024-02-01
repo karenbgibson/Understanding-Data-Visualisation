@@ -1,0 +1,22 @@
+"0","(books_cleaned %>% "
+"0","  glimpse())"
+"1","Rows: 11,043"
+"1",""
+"1","
+"
+"1","Columns: 9"
+"1",""
+"1","
+"
+"1","$ title              [3m[38;5;246m<chr>[39m[23m ""Harry Potter and the Half-Blood Prince (Ha…
+$ authors            [3m[38;5;246m<chr>[39m[23m ""J.K. Rowling/Mary GrandPré"", ""J.K. Rowling…
+$ average_rating     [3m[38;5;246m<chr>[39m[23m ""4.57"", ""4.49"", ""4.42"", ""4.56"", ""4.78"", ""3.…
+$ isbn13             [3m[38;5;246m<chr>[39m[23m ""9780439785969"", ""9780439358071"", ""97804395…
+$ language_code      [3m[38;5;246m<chr>[39m[23m ""eng"", ""eng"", ""eng"", ""eng"", ""eng"", ""en-US"",…
+$ ratings_count      [3m[38;5;246m<int>[39m[23m 2095690, 2153167, 6333, 2339585, 41428, 19,…
+$ text_reviews_count [3m[38;5;246m<int>[39m[23m 27591, 29221, 244, 36325, 164, 1, 808, 254,…
+$ publication_date   [3m[38;5;246m<chr>[39m[23m ""9/16/2006"", ""9/1/2004"", ""11/1/2003"", ""5/1/…
+$ publisher          [3m[38;5;246m<chr>[39m[23m ""Scholastic Inc."", ""Scholastic Inc."", ""Scho…"
+"1",""
+"1","
+"
