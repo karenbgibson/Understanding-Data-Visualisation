@@ -12,6 +12,8 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(ggplot2)
+library(e1071)
+library(modelr)
 ```
 
 ```{r}
@@ -329,7 +331,6 @@ What is the average across all books?
    mutate(above_or_below = if_else(mean_avg > mean, "above", "below"))
 )
 ```
-Maybe there is something here? Take out en-US and eng to leave us with a more comfortable range of review numbers?
 
 ```{r}
 above_below_palette <- c("darkgreen", "darkred")
@@ -346,7 +347,199 @@ language_avg_20_above_below %>%
   theme_bw()
 ```
 
-
-
-
 Maybe there is something here? Take out en-US and eng to leave us with a more comfortable range of review numbers?
+
+# Number of pages vs ratings count
+
+```{r}
+
+#reproducing cleaned data, this time keeping num_pages
+
+books_cleaned_v2 <- books %>% 
+  drop_na(ratings_count) %>% 
+  filter(ratings_count != 0) %>% 
+  filter(!average_rating %in% c(" Jr./Sam B. Warner",
+                             " one of the founding members of this Tolkien website)/Verlyn Flieger/Turgon (=David E. Smith)",
+                             " Rawles",
+                             " Son & Ferguson"
+                            )) %>% 
+  select(-c(book_id, isbn)) %>% 
+  mutate(num_pages = as.integer(num_pages),
+         ratings_count = as.integer(ratings_count)) %>% 
+  arrange(num_pages)
+
+```
+
+```{r}
+books_cleaned_v2 %>% 
+ggplot(aes(x = num_pages, y = ratings_count)) +
+  geom_point() +
+  labs(x = "Number of Pages", y = "Number of Ratings")
+```
+
+```{r}
+# how many books have <100 pages?
+
+books_cleaned_v2 %>% 
+  filter(num_pages <100)
+
+books_cleaned_v2 %>% 
+  filter(num_pages == 0)
+
+books_cleaned_v2 %>% 
+  filter(num_pages <10,
+         num_pages > 0)
+  
+```
+
+1,010 books have <100 pages, 75 of these have a page count of 0 and 116 have a page count of between 1 & 9. Given the unlikelihood of this many books being this short, it is clear that there are errors in this variable. 
+
+There is no known appropriate number for fewest pages a book may have. To try to eliminate any incorrect data, we remove the lowest 5% of num_pages. 
+
+Our histogram above also show that there are some outlier books that have a high number of pages. There appears to be a steady range of books with 
+
+```{r}
+
+# checking books with >1000 pages
+
+books_cleaned_v2 %>% 
+  filter(num_pages >1000)
+
+```
+There are 215 books with >1000 pages. Some of these appear to be collections of books, e.g. "The Border Trilogy". For data consistency, we will also remove the lowest 5% of num_pages.
+
+```{r}
+
+# Removing the bottom and top 5% of page count
+num_rows <- nrow(books_cleaned_v2)
+bottom_percentage <- 0.05
+top_percentage <- 0.95
+
+bottom_rows_to_remove <- round(num_rows * bottom_percentage)
+top_rows_to_remove <- round(num_rows * (1 - top_percentage))
+
+# Remove the bottom and top rows
+trimmed_books_v1 <- books_cleaned_v2[(bottom_rows_to_remove + 1):(num_rows - top_rows_to_remove), , drop = FALSE]
+```
+
+```{r}
+trimmed_books_v1 %>% 
+  ggplot(aes(x = num_pages, y = ratings_count)) +
+  geom_point() +
+  labs(x = "Number of Pages", y = "Number of Ratings")
+```
+
+```{r}
+trimmed_books_v2 <- trimmed_books_v1 %>% 
+  arrange(ratings_count)
+```
+
+
+```{r}
+# Removing the bottom and top 5% of ratings count
+num_rows <- nrow(trimmed_books_v2)
+bottom <- 0.05
+top <- 0.95
+
+bottom_remove <- round(num_rows * bottom)
+top_remove <- round(num_rows * (1 - top))
+
+# Remove the bottom and top rows
+trimmed_books_v2 <- trimmed_books_v2[(bottom_remove + 1):(num_rows - top_remove), , drop = FALSE]
+```
+
+```{r}
+trimmed_books_v2 %>% 
+  ggplot(aes(x = num_pages, y = ratings_count)) +
+  geom_point() +
+  labs(x = "Number of Pages", y = "Number of Ratings")
+```
+
+```{r}
+model <- lm(ratings_count ~ num_pages, data = trimmed_books_v2)
+summary(model)
+```
+```{r}
+plot(model)
+```
+
+```{r}
+data1 <- trimmed_books_v2 %>%
+  add_predictions(model) 
+
+data1 %>%
+  ggplot(aes(x = num_pages)) +
+  geom_point(aes(y = ratings_count)) +
+  geom_line(aes(y = pred), col = "red")
+```
+
+```{r}
+trimmed_books_v2 %>% 
+summarise(skewness = skewness(ratings_count, type = 1))
+```
+
+The data is highly right skewed. In this case we should either look at the median as our stat, or look at standardising the data.
+
+```{r}
+summary(trimmed_books_v2)
+```
+num_pages now ranges from 51-750.
+
+Use this to add book range categories:
+
+```{r}
+trimmed_books_with_range <- trimmed_books_v2 %>% 
+  mutate(page_range = case_when(
+      num_pages <= 150 ~ "51-150",
+      num_pages <= 250 ~ "151-250",
+      num_pages <= 350 ~ "251-350",
+      num_pages <= 450 ~ "351-450",
+      num_pages <= 550 ~ "451-550",
+      num_pages <= 650 ~ "551-650",
+      num_pages <= 750 ~ "651-750"
+  )) %>% 
+  mutate(page_range = factor(page_range, 
+                             levels = c("51-150",
+                                        "151-250", 
+                                        "251-350", 
+                                        "351-450", 
+                                        "451-550", 
+                                        "551-650", 
+                                        "651-750")))
+```
+
+```{r}
+trimmed_books_with_range %>% 
+  ggplot(aes(x = page_range, y = ratings_count)) +
+  geom_col()
+```
+
+```{r}
+(trimmed_range_summary <- trimmed_books_with_range %>% 
+  group_by(page_range) %>% 
+  summarise(median_ratings_count = median(ratings_count),
+            num_books = n()))
+```
+
+```{r}
+trimmed_books_with_range_normalised <- trimmed_books_with_range %>%
+  mutate(log_ratings_count = log(ratings_count))
+```
+
+```{r}
+trimmed_books_with_range_normalised %>% 
+  ggplot(aes(x = page_range, y = log_ratings_count)) +
+  geom_col()
+```
+
+```{r}
+(trimmed_range_normalised_summary <- trimmed_books_with_range_normalised %>% 
+  group_by(page_range) %>% 
+  summarise(mean = mean(log_ratings_count),
+            median = median(log_ratings_count),
+            num_books = n()))
+```
+
+
+
+

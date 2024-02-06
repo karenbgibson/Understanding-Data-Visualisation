@@ -1,4 +1,0 @@
-"0","(language_avg_20_above_below <- language_avg_20 %>% "
-"0","   mutate(mean = 3.943) %>% "
-"0","   mutate(above_or_below = if_else(mean_avg > mean, ""above"", ""below""))"
-"0",")"
