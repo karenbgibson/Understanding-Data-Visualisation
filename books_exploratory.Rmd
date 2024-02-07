@@ -14,6 +14,7 @@ library(lubridate)
 library(ggplot2)
 library(e1071)
 library(modelr)
+library(dplyr)
 ```
 
 ```{r}
@@ -509,13 +510,20 @@ trimmed_books_with_range <- trimmed_books_v2 %>%
 ```
 
 ```{r}
-trimmed_books_with_range %>% 
+set.seed(42)
+
+sampled_trimmed_books_with_range <- trimmed_books_with_range %>% group_by(page_range) %>% slice_sample(n=100)
+
+```
+
+```{r}
+sampled_trimmed_books_with_range %>% 
   ggplot(aes(x = page_range, y = ratings_count)) +
   geom_col()
 ```
 
 ```{r}
-(trimmed_range_summary <- trimmed_books_with_range %>% 
+(trimmed_range_summary <- sampled_trimmed_books_with_range %>% 
   group_by(page_range) %>% 
   summarise(median_ratings_count = median(ratings_count),
             num_books = n()))
