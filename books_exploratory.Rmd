@@ -14,6 +14,7 @@ library(lubridate)
 library(ggplot2)
 library(e1071)
 library(modelr)
+library(patchwork)
 ```
 
 ```{r}
@@ -366,6 +367,11 @@ books_cleaned_v2 <- books %>%
   select(-c(book_id, isbn)) %>% 
   mutate(num_pages = as.integer(num_pages),
          ratings_count = as.integer(ratings_count)) %>% 
+  mutate(average_rating = as.double(average_rating),
+         language_code = as.factor(language_code),
+         publication_date = mdy(publication_date)) %>% 
+  drop_na(publication_date) %>% 
+  mutate(publication_year = year(publication_date)) %>% 
   arrange(num_pages)
 
 ```
@@ -477,7 +483,6 @@ data1 %>%
 trimmed_books_v2 %>% 
 summarise(skewness = skewness(ratings_count, type = 1))
 ```
-
 The data is highly right skewed. In this case we should either look at the median as our stat, or look at standardising the data.
 
 ```{r}
@@ -513,6 +518,11 @@ trimmed_books_with_range %>%
   ggplot(aes(x = page_range, y = ratings_count)) +
   geom_col()
 ```
+```{r}
+# writing clean data
+
+trimmed_books_with_range %>%  write.csv("books_cleaned.csv")
+```
 
 ```{r}
 (trimmed_range_summary <- trimmed_books_with_range %>% 
@@ -520,26 +530,95 @@ trimmed_books_with_range %>%
   summarise(median_ratings_count = median(ratings_count),
             num_books = n()))
 ```
-
 ```{r}
-trimmed_books_with_range_normalised <- trimmed_books_with_range %>%
-  mutate(log_ratings_count = log(ratings_count))
+recent_publications <- c(2010, 2011, 2012, 2013, 2014)
 ```
 
 ```{r}
-trimmed_books_with_range_normalised %>% 
-  ggplot(aes(x = page_range, y = log_ratings_count)) +
-  geom_col()
+top_5_years <- trimmed_books_with_range %>% 
+  group_by(publication_year) %>% 
+  summarise(num_books = n()) %>% 
+  arrange(desc(num_books)) %>% 
+  head(5)
 ```
 
+
 ```{r}
-(trimmed_range_normalised_summary <- trimmed_books_with_range_normalised %>% 
-  group_by(page_range) %>% 
-  summarise(mean = mean(log_ratings_count),
-            median = median(log_ratings_count),
+(trimmed_range_summary_two <- trimmed_books_with_range %>% 
+  filter(publication_year %in% top_5_years$publication_year) %>% 
+  group_by(page_range, publication_year) %>% 
+  summarise(median_ratings_count = median(ratings_count),
             num_books = n()))
 ```
 
+```{r}
+trimmed_range_summary_two %>% 
+  ggplot(aes(x = publication_year, y = median_ratings_count,
+             colour = page_range)) +
+  geom_line()
+```
+## Percentage of representation in dataset for each page range grouping
 
+```{r}
+total_books <- nrow(trimmed_books_with_range)
 
+(page_range_overall <- trimmed_books_with_range %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>% 
+  mutate(percentage = (num_books / total_books) * 100) %>%
+  ggplot(aes(x = page_range, y = percentage, 
+             fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage, 2), "%")),
+            vjust = 2) +
+  labs(title = "Page count of all books") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+```
 
+## Top 500 books based on review count
+
+```{r}
+(page_range_top_500_review_count <- trimmed_books_with_range %>% 
+  arrange(desc(ratings_count)) %>% 
+  head(500) %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>%
+  mutate(percentage = (num_books / 500) * 100) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = page_range, y = percentage, fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage, 2), "%")), 
+            vjust = 2) +
+  labs(title = "How often does each page range appear in the 500 most reviewed books?") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+
+```
+```{r}
+#pasting both graphs together for side by side view
+page_range_overall + page_range_top_500_review_count
+```
+## Top 500 books based on average rating
+
+```{r}
+(page_range_top_500_avg_rating <- trimmed_books_with_range %>% 
+  arrange(desc(average_rating)) %>% 
+  head(500) %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>%
+  mutate(percentage = (num_books / 500) * 100) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = page_range, y = percentage, fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage, 2), "%")), 
+            vjust = 2) +
+  labs(title = "How often does each page range appear in the 500 highest reviewed books?") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+
+```
+```{r}
+#pasting both graphs together for side by side view
+page_range_overall + page_range_top_500_avg_rating
+```

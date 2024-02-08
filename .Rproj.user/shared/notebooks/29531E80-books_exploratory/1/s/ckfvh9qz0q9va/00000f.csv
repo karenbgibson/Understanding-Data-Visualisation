@@ -1,3 +1,0 @@
-"0","(top_5_percent_ratings_count %>% "
-"0","  distinct(publisher) %>% "
-"0","  arrange(publisher))"

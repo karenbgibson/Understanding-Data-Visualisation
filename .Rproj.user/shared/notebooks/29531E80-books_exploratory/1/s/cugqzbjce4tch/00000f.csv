@@ -1,3 +1,0 @@
-"0",""
-"0","(mult_languages_pivot <- published_multiple_languages %>%"
-"0","  pivot_wider(names_from = language_code, values_from = average_rating))"

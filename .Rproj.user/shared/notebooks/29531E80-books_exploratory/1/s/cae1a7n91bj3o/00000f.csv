@@ -1,7 +1,0 @@
-"0","ten_newest_books <- books_cleaned %>% "
-"0","  arrange(desc(publication_date)) %>% "
-"0","  head(10)"
-"0",""
-"0","(plot_ten_newest <- ten_newest_books %>% "
-"0","  ggplot(aes(x = publication_date, y = average_rating)) +"
-"0","  geom_col())"

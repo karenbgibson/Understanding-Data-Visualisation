@@ -1,2 +1,0 @@
-"0","(rating_two_or_one <- books_cleaned_average %>% "
-"0","  filter(rounded_rating <= 2))"

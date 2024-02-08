@@ -1,6 +1,0 @@
-"0","published_more_than_once <- books_cleaned_average %>%"
-"0","  filter(duplicated(title) | duplicated(title, fromLast = TRUE)) %>%"
-"0","  arrange(title)"
-"0",""
-"0","(published_more_than_once %>% "
-"0","  distinct(title))"
