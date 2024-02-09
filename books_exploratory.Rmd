@@ -493,7 +493,7 @@ num_pages now ranges from 51-750.
 Use this to add book range categories:
 
 ```{r}
-trimmed_books_with_range <- trimmed_books_v2 %>% 
+trimmed_books_v2_with_range <- trimmed_books_v2 %>% 
   mutate(page_range = case_when(
       num_pages <= 150 ~ "51-150",
       num_pages <= 250 ~ "151-250",
@@ -514,18 +514,18 @@ trimmed_books_with_range <- trimmed_books_v2 %>%
 ```
 
 ```{r}
-trimmed_books_with_range %>% 
+trimmed_books_v2_with_range %>% 
   ggplot(aes(x = page_range, y = ratings_count)) +
   geom_col()
 ```
 ```{r}
 # writing clean data
 
-trimmed_books_with_range %>%  write.csv("books_cleaned.csv")
+trimmed_books_v2_with_range %>%  write.csv("books_cleaned.csv")
 ```
 
 ```{r}
-(trimmed_range_summary <- trimmed_books_with_range %>% 
+(trimmed_v2_range_summary <- trimmed_books_v2_with_range %>% 
   group_by(page_range) %>% 
   summarise(median_ratings_count = median(ratings_count),
             num_books = n()))
@@ -535,7 +535,7 @@ recent_publications <- c(2010, 2011, 2012, 2013, 2014)
 ```
 
 ```{r}
-top_5_years <- trimmed_books_with_range %>% 
+top_5_years_v2 <- trimmed_books_v2_with_range %>% 
   group_by(publication_year) %>% 
   summarise(num_books = n()) %>% 
   arrange(desc(num_books)) %>% 
@@ -544,15 +544,15 @@ top_5_years <- trimmed_books_with_range %>%
 
 
 ```{r}
-(trimmed_range_summary_two <- trimmed_books_with_range %>% 
-  filter(publication_year %in% top_5_years$publication_year) %>% 
+(trimmed_v2_range_summary_two <- trimmed_books_v2_with_range %>% 
+  filter(publication_year %in% top_5_years_v2$publication_year) %>% 
   group_by(page_range, publication_year) %>% 
   summarise(median_ratings_count = median(ratings_count),
             num_books = n()))
 ```
 
 ```{r}
-trimmed_range_summary_two %>% 
+trimmed_v2_range_summary_two %>% 
   ggplot(aes(x = publication_year, y = median_ratings_count,
              colour = page_range)) +
   geom_line()
@@ -560,12 +560,12 @@ trimmed_range_summary_two %>%
 ## Percentage of representation in dataset for each page range grouping
 
 ```{r}
-total_books <- nrow(trimmed_books_with_range)
+total_books_v2 <- nrow(trimmed_books_v2_with_range)
 
-(page_range_overall <- trimmed_books_with_range %>% 
+(v2_page_range_overall <- trimmed_books_v2_with_range %>% 
   group_by(page_range) %>% 
   summarise(num_books = n()) %>% 
-  mutate(percentage = (num_books / total_books) * 100) %>%
+  mutate(percentage = (num_books / total_books_v2) * 100) %>%
   ggplot(aes(x = page_range, y = percentage, 
              fill = page_range)) +
   geom_col() +
@@ -579,7 +579,7 @@ total_books <- nrow(trimmed_books_with_range)
 ## Top 500 books based on review count
 
 ```{r}
-(page_range_top_500_review_count <- trimmed_books_with_range %>% 
+(v2_page_range_top_500_review_count <- trimmed_books_v2_with_range %>% 
   arrange(desc(ratings_count)) %>% 
   head(500) %>% 
   group_by(page_range) %>% 
@@ -597,12 +597,12 @@ total_books <- nrow(trimmed_books_with_range)
 ```
 ```{r}
 #pasting both graphs together for side by side view
-page_range_overall + page_range_top_500_review_count
+v2_page_range_overall + v2_page_range_top_500_review_count
 ```
 ## Top 500 books based on average rating
 
 ```{r}
-(page_range_top_500_avg_rating <- trimmed_books_with_range %>% 
+(v2_page_range_top_500_avg_rating <- trimmed_books_v2_with_range %>% 
   arrange(desc(average_rating)) %>% 
   head(500) %>% 
   group_by(page_range) %>% 
@@ -620,5 +620,106 @@ page_range_overall + page_range_top_500_review_count
 ```
 ```{r}
 #pasting both graphs together for side by side view
-page_range_overall + page_range_top_500_avg_rating
+v2_page_range_overall + v2_page_range_top_500_avg_rating
+```
+
+## Recreating above graphs with untrimmed dataset
+We are no longer looking for a statistion (e.g. mean or median) so removing outliers may not be necessary:
+
+```{r}
+summary(books_cleaned_v2)
+```
+The num_pages range from 0 to 6576. We remove the top and bottom 5% for the same reasons as before: to remove audio books and anthologies. We can use the previously created trimmed_books_v1 and add the categorical page range variable. 
+
+```{r}
+trimmed_books_v1
+```
+```{r}
+trimmed_books_v1_with_range <- trimmed_books_v1 %>% 
+  mutate(page_range = case_when(
+      num_pages <= 150 ~ "51-150",
+      num_pages <= 250 ~ "151-250",
+      num_pages <= 350 ~ "251-350",
+      num_pages <= 450 ~ "351-450",
+      num_pages <= 550 ~ "451-550",
+      num_pages <= 650 ~ "551-650",
+      num_pages <= 750 ~ "651-750"
+  )) %>% 
+  mutate(page_range = factor(page_range, 
+                             levels = c("51-150",
+                                        "151-250", 
+                                        "251-350", 
+                                        "351-450", 
+                                        "451-550", 
+                                        "551-650", 
+                                        "651-750")))
+```
+
+## Percentage of representation in dataset for each page range grouping (where ratings count has not been trimmed)
+
+```{r}
+total_books_v1 <- nrow(trimmed_books_v1_with_range)
+
+(v1_page_range_overall <- trimmed_books_v1_with_range %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>% 
+  mutate(percentage = (num_books / total_books_v1) * 100) %>%
+  ggplot(aes(x = page_range, y = percentage, 
+             fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage, 2), "%")),
+            vjust = 2) +
+  labs(title = "Page count of all books") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+```
+
+## Top 500 books based on review count
+
+```{r}
+(v1_page_range_top_500_review_count <- trimmed_books_v1_with_range %>% 
+  arrange(desc(ratings_count)) %>% 
+  head(500) %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>%
+  mutate(percentage = (num_books / 500) * 100) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = page_range, y = percentage, fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage, 2), "%")), 
+            vjust = 2) +
+  labs(title = "How often does each page range appear in the 500 most reviewed books?") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+
+```
+
+```{r}
+#pasting both graphs together for side by side view
+v1_page_range_overall + v1_page_range_top_500_review_count
+```
+
+## Top 500 untrimmed books based on average rating
+
+```{r}
+(v1_page_range_top_500_avg_rating <- trimmed_books_v1_with_range %>% 
+  arrange(desc(average_rating)) %>% 
+  head(500) %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>%
+  mutate(percentage = (num_books / 500) * 100) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = page_range, y = percentage, fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage, 2), "%")), 
+            vjust = 2) +
+  labs(title = "How often does each page range appear in the 500 highest reviewed books?") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+
+```
+
+```{r}
+#pasting both graphs together for side by side view
+v1_page_range_overall + v1_page_range_top_500_avg_rating
 ```
