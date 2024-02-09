@@ -1,0 +1,166 @@
+---
+title: "Checking cleaned data"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(ggplot2)
+library(patchwork)
+```
+
+```{r}
+# loading original dataset
+books <- read.csv("books.csv") %>% 
+  clean_names()
+```
+
+```{r}
+# re-cleaning
+final_books_cleaned <- books %>% 
+  drop_na(ratings_count) %>% 
+  filter(ratings_count != 0) %>% 
+  filter(!average_rating %in% c(" Jr./Sam B. Warner",
+                             " one of the founding members of this Tolkien website)/Verlyn Flieger/Turgon (=David E. Smith)",
+                             " Rawles",
+                             " Son & Ferguson"
+                            )) %>% 
+  select(-c(book_id, isbn)) %>% 
+  mutate(num_pages = as.integer(num_pages),
+         ratings_count = as.integer(ratings_count)) %>% 
+  mutate(average_rating = as.double(average_rating),
+         language_code = as.factor(language_code),
+         publication_date = mdy(publication_date)) %>% 
+  drop_na(publication_date) %>% 
+  mutate(publication_year = year(publication_date)) %>% 
+  arrange(num_pages)
+```
+```{r}
+# Removing the bottom and top 5% of page count to exclude audiobooks and anthologies
+num_rows <- nrow(final_books_cleaned)
+bottom_5_percent <- 0.05
+top_5_percent <- 0.95
+
+bottom_remove <- round(num_rows * bottom_5_percent)
+top_remove <- round(num_rows * (1 - top_5_percent))
+
+# Remove the bottom and top rows
+final_trimmed_books <- final_books_cleaned[(bottom_remove + 1):(num_rows - top_remove), , drop = FALSE]
+```
+
+```{r}
+# adding page range
+final_trimmed_books_with_range <- final_trimmed_books %>% 
+  mutate(page_range = case_when(
+      num_pages <= 150 ~ "51-150",
+      num_pages <= 250 ~ "151-250",
+      num_pages <= 350 ~ "251-350",
+      num_pages <= 450 ~ "351-450",
+      num_pages <= 550 ~ "451-550",
+      num_pages <= 650 ~ "551-650",
+      num_pages <= 750 ~ "651-750"
+  )) %>% 
+  mutate(page_range = factor(page_range, 
+                             levels = c("51-150",
+                                        "151-250", 
+                                        "251-350", 
+                                        "351-450", 
+                                        "451-550", 
+                                        "551-650", 
+                                        "651-750")))
+```
+
+```{r}
+# summarising final data to group page_range and calcualte number of books within
+# each range and the % share of total
+final_total_books <- nrow(final_trimmed_books_with_range)
+
+(final_page_range_all <- final_trimmed_books_with_range %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>% 
+  mutate(percentage = (round(num_books / final_total_books, 2)))
+)
+
+final_page_range_all %>%  write.csv("final_page_range_all.csv")
+```
+
+```{r}
+# plotting final data
+(final_all_plot <- final_page_range_all %>% 
+   ggplot(aes(x = page_range, y = percentage, 
+              fill = page_range)) +
+   geom_col() +
+   geom_text(aes(label = paste0(round(percentage * 100), "%")),
+             vjust = 2) +
+   labs(title = "Page count of all books") +
+   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+   guides(fill = FALSE))
+```
+```{r}
+# summarising top 500 books based on review count from final dataset
+# grouping by page_range and calcualting number of books within each range and 
+# % share of total
+(final_top_500_review_count <- final_trimmed_books_with_range %>% 
+  arrange(desc(ratings_count)) %>% 
+  head(500) %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>%
+  mutate(percentage = (num_books / 500)) %>% 
+  ungroup()
+)
+
+final_top_500_review_count %>%  write.csv("final_top_500_review_count.csv")
+  
+```
+
+
+```{r}
+# plotting top 500 books based on review_count
+(final_500_review_plot <- final_top_500_review_count %>% 
+ggplot(aes(x = page_range, y = percentage, fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage*100), "%")), 
+            vjust = 2) +
+  labs(title = "How often does each page range appear in the 500 most reviewed books?") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+```
+```{r}
+# patchworking all books vs top 500 by review count for side by side view
+final_all_plot + final_500_review_plot
+```
+```{r}
+# summarising top 500 books based on average rating from final dataset
+# grouping by page_range and calcualting number of books within each range and 
+# % share of total
+(final_top_500_ratings_count <- final_trimmed_books_with_range %>% 
+  arrange(desc(average_rating)) %>% 
+  head(500) %>% 
+  group_by(page_range) %>% 
+  summarise(num_books = n()) %>%
+  mutate(percentage = (num_books / 500)) %>% 
+  ungroup()
+)
+
+final_top_500_ratings_count %>%  write.csv("final_top_500_ratings_count.csv")
+```
+```{r}
+# plotting top 500 books based on average_rating
+(final_500_ratings_plot <- final_top_500_ratings_count %>% 
+ggplot(aes(x = page_range, y = percentage, fill = page_range)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(percentage*100), "%")), 
+            vjust = 2) +
+  labs(title = "How often does each page range appear in the 500 highly rated books?") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1)) +
+  guides(fill = FALSE))
+```
+```{r}
+# patchworking all books vs top 500 by average rating for side by side view
+final_all_plot + final_500_ratings_plot
+```
+
