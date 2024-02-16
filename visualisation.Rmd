@@ -1,0 +1,51 @@
+---
+title: "Visualisation"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+final_page_range_all <- final_page_range_all %>% 
+  mutate(type = "All books")
+```
+
+```{r}
+final_top_500_review_count <- final_top_500_review_count %>% 
+  mutate(type = "Top 500 most reviewed")
+```
+
+
+```{r}
+combined_for_chart <- final_page_range_all %>% 
+  bind_rows(final_top_500_review_count) %>% 
+  mutate(Percentage = percentage*100)
+
+combined_for_chart %>%  write_csv("combined_data_for_chart.csv")
+  
+```
+
+```{r}
+colours <- c("orchid3", "navy")
+```
+
+
+```{r}
+(combined_chart <- combined_for_chart %>% 
+  ggplot(aes(x = page_range, y = Percentage,
+             fill = type)) +
+  geom_col(position = "dodge")  +
+  guides(fill = guide_legend(title = NULL)) + 
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_fill_manual(values = colours) + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 10, angle = 45)) +
+  labs(title = "Reader engagement vs book length",
+       x = "Page range"))
+```
+

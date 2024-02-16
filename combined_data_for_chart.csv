@@ -1,0 +1,15 @@
+page_range,num_books,percentage,type,Percentage
+51-150,1158,0.12,All books,12
+151-250,2543,0.26,All books,26
+251-350,2549,0.26,All books,26
+351-450,2016,0.2,All books,20
+451-550,870,0.09,All books,9
+551-650,517,0.05,All books,5
+651-750,284,0.03,All books,3
+51-150,31,0.062,Top 500 most reviewed,6.2
+151-250,96,0.192,Top 500 most reviewed,19.2
+251-350,135,0.27,Top 500 most reviewed,27
+351-450,139,0.278,Top 500 most reviewed,27.800000000000004
+451-550,58,0.116,Top 500 most reviewed,11.600000000000001
+551-650,24,0.048,Top 500 most reviewed,4.8
+651-750,17,0.034,Top 500 most reviewed,3.4000000000000004

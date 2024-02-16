@@ -72,6 +72,8 @@ final_trimmed_books_with_range <- final_trimmed_books %>%
                                         "451-550", 
                                         "551-650", 
                                         "651-750")))
+
+final_trimmed_books_with_range %>% write.csv("final_trimmed_books_with_range.csv")
 ```
 
 ```{r}
